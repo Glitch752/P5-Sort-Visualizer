@@ -10,6 +10,7 @@ function setup() {
     sortType.style('border', '1px solid #000000');
     sortType.option('Bubble sort');
     sortType.option('Quick sort');
+    sortType.option('Bogo sort');
     sortType.selected('Bubble sort');
     sortType.changed(updateSortType);
 
@@ -116,6 +117,13 @@ function updateSortType() {
     } else {
         visualization.disable('Pivot and partition');
     }
+
+    if(sortType.value() == 'Bogo sort') {
+        visualization.disable('Swap');
+    } else {
+        const pivotAndPartition = visualization.elt.children[1];
+        pivotAndPartition.removeAttribute('disabled');
+    }
 }
 
 function updateDataType() {
@@ -151,8 +159,10 @@ function sortData() {
     sorting = true;
     if(sortType.value() == 'Bubble sort') {
         bubbleSort();
-    } else {
+    } else if (sortType.value() == 'Quick sort') {
         quickSort(data, 0, data.length - 1);
+    } else {
+        bogoSort();
     }
 }
 
@@ -174,6 +184,7 @@ async function bubbleSort() {
 }
 
 async function quickSort(array, start, end) {
+    if(!sorting) return;
     if(start < end) {
         const pivotIndex = await partition(array, start, end);
 
@@ -208,6 +219,20 @@ async function partition(array, start, end) {
     }
 
     return i + 1;
+}
+
+async function bogoSort() {
+    while(!isSorted(data)) {
+        if(!sorting) return;
+        randomize(data);
+        await sleep(speed.value());
+    }
+}
+function isSorted(data) {
+    for(let i = 0; i < data.length - 1; i++) {
+        if(data[i].value > data[i + 1].value) return false;
+    }
+    return true;
 }
 
 async function swap(array, i, j) {
