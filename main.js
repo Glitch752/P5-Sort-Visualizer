@@ -9,6 +9,7 @@ function setup() {
     sortType.style('font-size', '20px');
     sortType.style('border', '1px solid #000000');
     sortType.option('Bubble sort');
+    sortType.option('Quick sort');
     sortType.selected('Bubble sort');
     sortType.changed(updateSortType);
 
@@ -49,7 +50,10 @@ function setup() {
     visualization.style('border', '1px solid #000000');
     visualization.option('None');
     visualization.option('Swap');
+    visualization.option('Pivot and partition');
+    visualization.disable('Pivot and partition');
     visualization.selected('None');
+
 
     sort = createButton('Sort');
     sort.position(windowWidth - 210, 10);
@@ -86,6 +90,14 @@ function draw() {
             } else {
                 fill(0, 0, 0);
             }
+        } else if(visualizationType == 'Pivot and partition') {
+            if(data[i].pivot) {
+                fill(255, 0, 0);
+            } else if(data[i].partition) {
+                fill(0, 0, 255);
+            } else {
+                fill(0, 0, 0);
+            }
         } else {
             fill(0);
         }
@@ -97,6 +109,13 @@ function draw() {
 
 function updateSortType() {
     resetData();
+
+    if(sortType.value() == 'Quick sort') {
+        const pivotAndPartition = visualization.elt.children[2];
+        pivotAndPartition.removeAttribute('disabled');
+    } else {
+        visualization.disable('Pivot and partition');
+    }
 }
 
 function updateDataType() {
@@ -132,6 +151,8 @@ function sortData() {
     sorting = true;
     if(sortType.value() == 'Bubble sort') {
         bubbleSort();
+    } else {
+        quickSort(data, 0, data.length - 1);
     }
 }
 
@@ -150,6 +171,43 @@ async function bubbleSort() {
             }
         }
     }
+}
+
+async function quickSort(array, start, end) {
+    if(start < end) {
+        const pivotIndex = await partition(array, start, end);
+
+        await Promise.all[
+            quickSort(array, start, pivotIndex - 1),
+            quickSort(array, pivotIndex + 1, end)];
+    }
+}
+
+async function partition(array, start, end) {
+    for(let i = start; i <= end; i++) {
+        array[i].partition = true;
+    }
+
+    const pivotData = array[end].value;
+
+    array[end].pivot = true;
+
+    let i = start - 1;
+
+    for(let j = start; j < end; j++) {
+        if(array[j].value <= pivotData) {
+            i++;
+            await swap(array, i, j);
+        }
+    }
+    await swap(array, i + 1, end);
+
+    for(let i = start; i <= end; i++) {
+        array[i].partition = false;
+        array[i].pivot = false;
+    }
+
+    return i + 1;
 }
 
 async function swap(array, i, j) {
